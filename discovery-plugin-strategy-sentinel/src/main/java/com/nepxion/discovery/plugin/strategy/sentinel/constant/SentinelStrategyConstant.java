@@ -25,6 +25,5 @@ public class SentinelStrategyConstant {
     public static final String SENTINEL_AUTHORITY_KEY = "sentinel-authority";
     public static final String SENTINEL_SYSTEM_KEY = "sentinel-system";
     public static final String SENTINEL_PARAM_FLOW_KEY = "sentinel-param-flow";
-
     public static final String SENTINEL_EMPTY_RULE = "[]";
 }

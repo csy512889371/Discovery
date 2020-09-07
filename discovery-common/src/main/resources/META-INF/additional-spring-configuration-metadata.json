@@ -55,6 +55,12 @@
 			"description": "Group generator length."
 		},
 		{
+			"name": "spring.application.group.generator.character",
+			"type": "java.lang.String",
+			"defaultValue": "",
+			"description": "Group generator character."
+		},
+		{
 			"name": "spring.application.git.generator.enabled",
 			"type": "java.lang.Boolean",
 			"defaultValue": false,
@@ -97,22 +103,22 @@
 			"description": "Whether no server notify is enabled."
 		},
 		{
-			"name": "spring.application.environment.isolation.enabled",
-			"type": "java.lang.Boolean",
-			"defaultValue": false,
-			"description": "Whether environment isolation is enabled."
-		},
-		{
-			"name": "spring.application.environment.route.enabled",
-			"type": "java.lang.Boolean",
-			"defaultValue": false,
-			"description": "Whether environment route is enabled."
-		},
-		{
 			"name": "spring.application.environment.route",
 			"type": "java.lang.String",
 			"defaultValue": "common",
 			"description": "An environment will be routed to."
+		},
+		{
+			"name": "spring.application.zone.affinity.enabled",
+			"type": "java.lang.Boolean",
+			"defaultValue": false,
+			"description": "Whether zone affinity is enabled."
+		},
+		{
+			"name": "spring.application.zone.route.enabled",
+			"type": "java.lang.Boolean",
+			"defaultValue": true,
+			"description": "Whether zone route is enabled."
 		}
 	]
 }

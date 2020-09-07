@@ -6,6 +6,7 @@ package com.nepxion.discovery.plugin.framework.context;
  * <p>Copyright: Copyright (c) 2017-2050</p>
  * <p>Company: Nepxion</p>
  * @author Haojun Ren
+ * @author Robin.G
  * @version 1.0
  */
 
@@ -23,10 +24,16 @@ public class PluginContextAware implements ApplicationContextAware {
     private ApplicationContext applicationContext;
     private Environment environment;
 
+    private static ApplicationContext staticApplicationContext;
+    private static Environment staticEnvironment;
+
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
         this.environment = applicationContext.getEnvironment();
+
+        staticApplicationContext = applicationContext;
+        staticEnvironment = applicationContext.getEnvironment();
     }
 
     public Object getBean(String name) throws BeansException {
@@ -85,6 +92,14 @@ public class PluginContextAware implements ApplicationContextAware {
         return environment;
     }
 
+    public static ApplicationContext getStaticApplicationContext() {
+        return staticApplicationContext;
+    }
+
+    public static Environment getStaticEnvironment() {
+        return staticEnvironment;
+    }
+
     public Boolean isRegisterControlEnabled() {
         return isRegisterControlEnabled(environment);
     }
@@ -113,6 +128,10 @@ public class PluginContextAware implements ApplicationContextAware {
         return getApplicationType(environment);
     }
 
+    public String getApplicationUUId() {
+        return getApplicationUUId(environment);
+    }
+
     public String getGroupKey() {
         return getGroupKey(environment);
     }
@@ -127,6 +146,10 @@ public class PluginContextAware implements ApplicationContextAware {
 
     public Integer getGroupGeneratorLength() {
         return getGroupGeneratorLength(environment);
+    }
+
+    public String getGroupGeneratorCharacter() {
+        return getGroupGeneratorCharacter(environment);
     }
 
     public Boolean isGitGeneratorEnabled() {
@@ -166,11 +189,15 @@ public class PluginContextAware implements ApplicationContextAware {
     }
 
     public static String getApplicationName(Environment environment) {
-        return environment.getProperty(DiscoveryConstant.SPRING_APPLICATION_NAME);
+        return environment.getProperty(DiscoveryConstant.SPRING_APPLICATION_NAME, String.class, DiscoveryConstant.UNKNOWN);
     }
 
     public static String getApplicationType(Environment environment) {
         return environment.getProperty(DiscoveryConstant.SPRING_APPLICATION_TYPE, String.class, DiscoveryConstant.UNKNOWN);
+    }
+
+    public static String getApplicationUUId(Environment environment) {
+        return environment.getProperty(DiscoveryConstant.SPRING_APPLICATION_UUID, String.class, DiscoveryConstant.UNKNOWN);
     }
 
     public static String getGroupKey(Environment environment) {
@@ -189,6 +216,10 @@ public class PluginContextAware implements ApplicationContextAware {
         return environment.getProperty(DiscoveryConstant.SPRING_APPLICATION_GROUP_GENERATOR_LENGTH, Integer.class, -1);
     }
 
+    public static String getGroupGeneratorCharacter(Environment environment) {
+        return environment.getProperty(DiscoveryConstant.SPRING_APPLICATION_GROUP_GENERATOR_CHARACTER, String.class, StringUtils.EMPTY);
+    }
+
     public static Boolean isGitGeneratorEnabled(Environment environment) {
         return environment.getProperty(DiscoveryConstant.SPRING_APPLICATION_GIT_GENERATOR_ENABLED, Boolean.class, Boolean.FALSE);
     }
@@ -198,7 +229,7 @@ public class PluginContextAware implements ApplicationContextAware {
     }
 
     public static String getGitVersionKey(Environment environment) {
-        return environment.getProperty(DiscoveryConstant.SPRING_APPLICATION_GIT_VERSION_KEY, String.class, "{" + DiscoveryConstant.GIT_COMMIT_ID_ABBREV + "}-{" + DiscoveryConstant.GIT_COMMIT_TIME + "}");
+        return environment.getProperty(DiscoveryConstant.SPRING_APPLICATION_GIT_VERSION_KEY, String.class, "{" + DiscoveryConstant.GIT_COMMIT_TIME + "}-{" + DiscoveryConstant.GIT_TOTAL_COMMIT_COUNT + "}");
     }
 
     public static String getContextPath(Environment environment) {

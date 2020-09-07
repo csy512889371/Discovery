@@ -93,7 +93,7 @@ public class ServiceTopology extends AbstractTopology {
     private static final long serialVersionUID = 1L;
 
     private LocationEntity groupLocationEntity = new LocationEntity(120, 250, 280, 0);
-    private LocationEntity nodeLocationEntity = new LocationEntity(0, 0, 120, 120);
+    private LocationEntity nodeLocationEntity = new LocationEntity(0, 0, 120, 150);
     private TopologyEntity serviceGroupEntity = new TopologyEntity(TopologyEntityType.SERVICE_GROUP, TopologyStyleType.LARGE, true);
     private TopologyEntity notServiceGroupEntity = new TopologyEntity(TopologyEntityType.GATEWAY_GROUP, TopologyStyleType.LARGE, true);
     private TopologyEntity serviceNodeEntity = new TopologyEntity(TopologyEntityType.SERVICE, TopologyStyleType.MIDDLE, false);
@@ -388,10 +388,13 @@ public class ServiceTopology extends AbstractTopology {
             stringBuilder.append("]");
         }
         if (StringUtils.isNotEmpty(instance.getRegion())) {
-            stringBuilder.append("\n [Region=").append(instance.getRegion()).append("]");
+            stringBuilder.append("\n [Reion=").append(instance.getRegion()).append("]");
         }
         if (StringUtils.isNotEmpty(instance.getEnvironment())) {
             stringBuilder.append("\n [Env=").append(instance.getEnvironment()).append("]");
+        }
+        if (StringUtils.isNotEmpty(instance.getZone())) {
+            stringBuilder.append("\n [Zone=").append(instance.getZone()).append("]");
         }
 
         return ButtonManager.getHtmlText(stringBuilder.toString());
@@ -441,7 +444,7 @@ public class ServiceTopology extends AbstractTopology {
         instance.setVersion(versions.get(0));
         instance.setDynamicVersion(versions.get(1));
         instance.setRule(rules.get(0));
-        instance.setDynamicRule(rules.get(1));
+        instance.setDynamicRule(rules.get(2));
 
         updateNode(node, instance);
     }
@@ -1032,7 +1035,7 @@ public class ServiceTopology extends AbstractTopology {
             updateRuleButton.setPreferredSize(new Dimension(updateRuleButton.getPreferredSize().width, 30));
 
             clearRuleButton = new JClassicButton(createClearRuleAction());
-            updateRuleButton.setPreferredSize(new Dimension(clearRuleButton.getPreferredSize().width, 30));
+            clearRuleButton.setPreferredSize(new Dimension(clearRuleButton.getPreferredSize().width, 30));
 
             JPanel toolBar = new JPanel();
             toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.X_AXIS));

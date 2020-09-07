@@ -105,7 +105,7 @@
         <!-- 1. 标准配置，举例如下 -->
         <!--    <version provider-weight-value="1.0=85;1.1=15"/> 表示版本为1.0的服务提供85%的权重流量，版本为1.1的服务提供15%的权重流量 -->
         <!-- 2. 全局版本权重可以切换整条调用链的权重配比 -->
-        <!-- 3. 尽量为线上所有版本都赋予权重值   -->
+        <!-- 3. 尽量为线上所有版本都赋予权重值 -->
 
         <!-- 区域权重策略介绍 -->
         <!-- 1. 标准配置，举例如下 -->
@@ -191,7 +191,32 @@
             <route id="e-1" type="region-weight">{"discovery-springcloud-example-a":"dev=85;qa=15", "discovery-springcloud-example-b":"dev=85;qa=15", "discovery-springcloud-example-c":"dev=85;qa=15"}</route>
             <route id="e-2" type="region-weight">{"discovery-springcloud-example-a":"dev=15;qa=85", "discovery-springcloud-example-b":"dev=15;qa=85", "discovery-springcloud-example-c":"dev=15;qa=85"}</route>
         </routes>
+
+        <!-- 策略中配置条件表达式中的Header来决策蓝绿和灰度，可以代替外部传入Header -->
+        <headers>
+            <header key="a" value="1"/>
+        </headers>
     </strategy-customization>
+
+    <!-- 策略路由上服务屏蔽黑名单。一般适用于服务下线场景，流量实现实时性的绝对无损：下线之前，把服务实例添加到下面屏蔽名单中，负载均衡不会去寻址该服务实例。下线之后，清除该名单。该配置运行在全局订阅模式下 -->
+    <strategy-blacklist>
+        <!-- 通过全局唯一ID进行屏蔽，ID对应于元数据spring.application.uuid字段，适用于Docker和K8s上IP地址不确定的场景 -->
+        <!-- 单个ID形式。如果多个用“;”分隔，不允许出现空格 -->
+        <id value="e92edde5-0153-4ec8-9cbb-b4d3f415aa33;af043384-c8a5-451e-88f4-457914e8e3bc"/>
+
+        <!-- 多个ID节点形式 -->
+        <!-- <id value="e92edde5-0153-4ec8-9cbb-b4d3f415aa33"/>
+        <id value="af043384-c8a5-451e-88f4-457914e8e3bc"/> -->
+
+        <!-- 通过IP地址或者端口或者IP地址+端口进行屏蔽。适用于IP地址确定的场景 -->
+        <!-- 单个Address形式。如果多个用“;”分隔，不允许出现空格 -->
+        <address value="192.168.43.101:1201;192.168.*.102;1301"/>
+
+        <!-- 多个Address节点形式 -->
+        <!-- <address value="192.168.43.101:1201"/>
+        <address value="192.168.*.102"/>
+        <address value="1301"/> -->
+    </strategy-blacklist>
 
     <!-- 参数控制，由远程推送参数的改变，实现一些特色化的灰度发布，例如，基于数据库的灰度发布 -->
     <parameter>

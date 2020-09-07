@@ -12,22 +12,13 @@ package com.nepxion.discovery.plugin.strategy.service.context;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.nepxion.discovery.plugin.strategy.context.AbstractStrategyContextHolder;
-import com.nepxion.discovery.plugin.strategy.service.filter.ServiceStrategyRouteFilter;
 
 public class ServiceStrategyContextHolder extends AbstractStrategyContextHolder {
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceStrategyContextHolder.class);
-
-    @Autowired
-    private ServiceStrategyRouteFilter serviceStrategyRouteFilter;
-
     public ServletRequestAttributes getRestAttributes() {
         RequestAttributes requestAttributes = RestStrategyContext.getCurrentContext().getRequestAttributes();
         if (requestAttributes == null) {
@@ -45,36 +36,19 @@ public class ServiceStrategyContextHolder extends AbstractStrategyContextHolder 
     public String getHeader(String name) {
         ServletRequestAttributes attributes = getRestAttributes();
         if (attributes == null) {
-            LOG.warn("The ServletRequestAttributes object is lost for thread switched probably");
+            // LOG.warn("The ServletRequestAttributes object is lost for thread switched probably");
 
             return null;
         }
 
         return attributes.getRequest().getHeader(name);
     }
-
+    
+    // 如果配置了内置条件Header，强制使用内置条件Header的模式
+    // 该模式只适用于服务层。不希望在服务层处理的这么复杂，且一般情况下，不会在服务层内置条件Header
+    // 该模式不适用于网关层。网关层需要处理条件Header外部优先，还是内部优先
     @Override
-    public String getRouteVersion() {
-        return serviceStrategyRouteFilter.getRouteVersion();
-    }
-
-    @Override
-    public String getRouteRegion() {
-        return serviceStrategyRouteFilter.getRouteRegion();
-    }
-
-    @Override
-    public String getRouteAddress() {
-        return serviceStrategyRouteFilter.getRouteAddress();
-    }
-
-    @Override
-    public String getRouteVersionWeight() {
-        return serviceStrategyRouteFilter.getRouteVersionWeight();
-    }
-
-    @Override
-    public String getRouteRegionWeight() {
-        return serviceStrategyRouteFilter.getRouteRegionWeight();
+    protected boolean isInnerConditionHeaderForced() {
+        return true;
     }
 }

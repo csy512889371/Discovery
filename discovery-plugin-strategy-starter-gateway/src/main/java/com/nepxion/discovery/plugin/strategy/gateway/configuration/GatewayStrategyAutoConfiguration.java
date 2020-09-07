@@ -16,20 +16,17 @@ import org.springframework.cloud.netflix.ribbon.RibbonClientConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.nepxion.discovery.common.constant.DiscoveryConstant;
 import com.nepxion.discovery.plugin.strategy.adapter.DefaultDiscoveryEnabledAdapter;
-import com.nepxion.discovery.plugin.strategy.adapter.DefaultEnvironmentDiscoveryEnabledStrategy;
 import com.nepxion.discovery.plugin.strategy.adapter.DiscoveryEnabledAdapter;
-import com.nepxion.discovery.plugin.strategy.adapter.DiscoveryEnabledStrategy;
 import com.nepxion.discovery.plugin.strategy.constant.StrategyConstant;
 import com.nepxion.discovery.plugin.strategy.gateway.filter.DefaultGatewayStrategyClearFilter;
 import com.nepxion.discovery.plugin.strategy.gateway.filter.DefaultGatewayStrategyRouteFilter;
 import com.nepxion.discovery.plugin.strategy.gateway.filter.GatewayStrategyClearFilter;
 import com.nepxion.discovery.plugin.strategy.gateway.filter.GatewayStrategyRouteFilter;
-import com.nepxion.discovery.plugin.strategy.gateway.tracer.DefaultGatewayStrategyTracer;
-import com.nepxion.discovery.plugin.strategy.gateway.tracer.GatewayStrategyTracer;
-import com.nepxion.discovery.plugin.strategy.gateway.wrapper.DefaultCallableWrapper;
-import com.nepxion.discovery.plugin.strategy.wrapper.CallableWrapper;
+import com.nepxion.discovery.plugin.strategy.gateway.monitor.DefaultGatewayStrategyMonitor;
+import com.nepxion.discovery.plugin.strategy.gateway.monitor.GatewayStrategyMonitor;
+import com.nepxion.discovery.plugin.strategy.gateway.wrapper.DefaultGatewayStrategyCallableWrapper;
+import com.nepxion.discovery.plugin.strategy.gateway.wrapper.GatewayStrategyCallableWrapper;
 
 @Configuration
 @AutoConfigureBefore(RibbonClientConfiguration.class)
@@ -49,26 +46,21 @@ public class GatewayStrategyAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(value = StrategyConstant.SPRING_APPLICATION_STRATEGY_TRACE_ENABLED, matchIfMissing = false)
-    public GatewayStrategyTracer gatewayStrategyTracer() {
-        return new DefaultGatewayStrategyTracer();
+    @ConditionalOnProperty(value = StrategyConstant.SPRING_APPLICATION_STRATEGY_MONITOR_ENABLED, matchIfMissing = false)
+    public GatewayStrategyMonitor gatewayStrategyMonitor() {
+        return new DefaultGatewayStrategyMonitor();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(value = StrategyConstant.SPRING_APPLICATION_STRATEGY_HYSTRIX_THREADLOCAL_SUPPORTED, matchIfMissing = false)
+    public GatewayStrategyCallableWrapper gatewayStrategyCallableWrapper() {
+        return new DefaultGatewayStrategyCallableWrapper();
     }
 
     @Bean
     @ConditionalOnMissingBean
     public DiscoveryEnabledAdapter discoveryEnabledAdapter() {
         return new DefaultDiscoveryEnabledAdapter();
-    }
-
-    @Bean
-    @ConditionalOnProperty(value = DiscoveryConstant.SPRING_APPLICATION_ENVIRONMENT_ISOLATION_ENABLED, matchIfMissing = false)
-    public DiscoveryEnabledStrategy environmentDiscoveryEnabledStrategy() {
-        return new DefaultEnvironmentDiscoveryEnabledStrategy();
-    }
-
-    @Bean
-    @ConditionalOnProperty(value = StrategyConstant.SPRING_APPLICATION_STRATEGY_HYSTRIX_THREADLOCAL_SUPPORTED, matchIfMissing = false)
-    public CallableWrapper callableWrapper() {
-        return new DefaultCallableWrapper();
     }
 }

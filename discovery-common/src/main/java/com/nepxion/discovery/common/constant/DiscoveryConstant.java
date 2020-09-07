@@ -10,10 +10,11 @@ package com.nepxion.discovery.common.constant;
  */
 
 public class DiscoveryConstant {
-    public static final String DISCOVERY_VERSION = "6.0.0-RC1";
+    public static final String DISCOVERY_VERSION = "6.1.0-SNAPSHOT";
 
     public static final String SPRING_APPLICATION_DISCOVERY_PLUGIN = "spring.application.discovery.plugin";
     public static final String SPRING_APPLICATION_DISCOVERY_VERSION = "spring.application.discovery.version";
+    public static final String SPRING_APPLICATION_DISCOVERY_AGENT_VERSION = "spring.application.discovery.agent.version";
     public static final String SPRING_APPLICATION_REGISTER_CONTROL_ENABLED = "spring.application.register.control.enabled";
     public static final String SPRING_APPLICATION_DISCOVERY_CONTROL_ENABLED = "spring.application.discovery.control.enabled";
     public static final String SPRING_APPLICATION_CONFIG_REST_CONTROL_ENABLED = "spring.application.config.rest.control.enabled";
@@ -29,10 +30,10 @@ public class DiscoveryConstant {
     public static final String SPRING_APPLICATION_NO_SERVERS_RETRY_TIMES = "spring.application.no.servers.retry.times";
     public static final String SPRING_APPLICATION_NO_SERVERS_RETRY_AWAIT_TIME = "spring.application.no.servers.retry.await.time";
     public static final String SPRING_APPLICATION_NO_SERVERS_NOTIFY_ENABLED = "spring.application.no.servers.notify.enabled";
-    public static final String SPRING_APPLICATION_ENVIRONMENT_ISOLATION_ENABLED = "spring.application.environment.isolation.enabled";
-    public static final String SPRING_APPLICATION_ENVIRONMENT_ROUTE_ENABLED = "spring.application.environment.route.enabled";
     public static final String SPRING_APPLICATION_ENVIRONMENT_ROUTE = "spring.application.environment.route";
     public static final String SPRING_APPLICATION_ENVIRONMENT_ROUTE_VALUE = "common";
+    public static final String SPRING_APPLICATION_ZONE_AFFINITY_ENABLED = "spring.application.zone.affinity.enabled";
+    public static final String SPRING_APPLICATION_ZONE_ROUTE_ENABLED = "spring.application.zone.route.enabled";
 
     public static final String CONTEXT_PATH = "server.servlet.context-path";
 
@@ -41,6 +42,7 @@ public class DiscoveryConstant {
 
     public static final String SPRING_APPLICATION_GROUP_GENERATOR_ENABLED = "spring.application.group.generator.enabled";
     public static final String SPRING_APPLICATION_GROUP_GENERATOR_LENGTH = "spring.application.group.generator.length";
+    public static final String SPRING_APPLICATION_GROUP_GENERATOR_CHARACTER = "spring.application.group.generator.character";
 
     public static final String SPRING_APPLICATION_GIT_GENERATOR_ENABLED = "spring.application.git.generator.enabled";
     public static final String SPRING_APPLICATION_GIT_GENERATOR_PATH = "spring.application.git.generator.path";
@@ -50,7 +52,11 @@ public class DiscoveryConstant {
     public static final String GIT_COMMIT_ID_ABBREV = "git.commit.id.abbrev";
     public static final String GIT_COMMIT_TIME = "git.commit.time";
     public static final String GIT_BUILD_VERSION = "git.build.version";
+    public static final String GIT_TOTAL_COMMIT_COUNT = "git.total.commit.count";
 
+    public static final String APP_ID = "app.id";
+    public static final String SPRING_BOOT_VERSION = "spring.boot.version";
+    public static final String SPRING_APPLICATION_UUID = "spring.application.uuid";
     public static final String SPRING_APPLICATION_NAME = "spring.application.name";
     public static final String SPRING_APPLICATION_TYPE = "spring.application.type";
     public static final String GROUP = "group";
@@ -61,16 +67,20 @@ public class DiscoveryConstant {
 
     public static final String SERVICE_TYPE = "service";
     public static final String GATEWAY_TYPE = "gateway";
+    public static final String CONSOLE_TYPE = "console";
 
     public static final String DYNAMIC_VERSION = "dynamicVersion";
     public static final String RULE = "rule";
     public static final String DYNAMIC_RULE = "dynamicRule";
+    public static final String DYNAMIC_GLOBAL_RULE = "dynamicGlobalRule";
+    public static final String DYNAMIC_PARTIAL_RULE = "dynamicPartialRule";
     public static final String REACH_MAX_LIMITED_COUNT = "reach max limited count";
     public static final String REGISTER_ISOLATION = "register isolation";
 
     public static final String VERSION = "version";
     public static final String REGION = "region";
     public static final String ENVIRONMENT = "env";
+    public static final String ZONE = "zone";
     public static final String ADDRESS = "address";
     public static final String VERSION_WEIGHT = "version-weight";
     public static final String REGION_WEIGHT = "region-weight";
@@ -80,11 +90,13 @@ public class DiscoveryConstant {
 
     public static final String N_D_SERVICE_GROUP = "n-d-service-group";
     public static final String N_D_SERVICE_TYPE = "n-d-service-type";
+    public static final String N_D_SERVICE_APP_ID = "n-d-service-app-id";
     public static final String N_D_SERVICE_ID = "n-d-service-id";
     public static final String N_D_SERVICE_ADDRESS = "n-d-service-address";
     public static final String N_D_SERVICE_VERSION = "n-d-service-version";
     public static final String N_D_SERVICE_REGION = "n-d-service-region";
     public static final String N_D_SERVICE_ENVIRONMENT = "n-d-service-env";
+    public static final String N_D_SERVICE_ZONE = "n-d-service-zone";
 
     public static final String N_D_VERSION = "n-d-version";
     public static final String N_D_REGION = "n-d-region";
@@ -92,16 +104,20 @@ public class DiscoveryConstant {
     public static final String N_D_ADDRESS = "n-d-address";
     public static final String N_D_VERSION_WEIGHT = "n-d-version-weight";
     public static final String N_D_REGION_WEIGHT = "n-d-region-weight";
+    public static final String N_D_ID_BLACKLIST = "n-d-id-blacklist";
+    public static final String N_D_ADDRESS_BLACKLIST = "n-d-address-blacklist";
 
     public static final String TRACE_ID = "trace-id";
     public static final String SPAN_ID = "span-id";
-    public static final String SPAN_VALUE = "GRAY";
-    public static final String TAG_COMPONENT_VALUE = "gray";
-    public static final String PLUGIN = "plugin";
-    public static final String PLUGIN_VALUE = "Nepxion Discovery";
+    public static final String SPAN_VALUE = "NEPXION";
+    public static final String SPAN_TAG_PLUGIN_NAME = "plugin"; 
+    public static final String SPAN_TAG_PLUGIN_VALUE = "Nepxion Discovery";
 
     public static final String CLASS = "class";
     public static final String METHOD = "method";
+    public static final String PARAMETER = "parameter"; 
+    public static final String RETURN = "return";
+    public static final String PARAMETER_MAP = "parameterMap";
     public static final String EVENT = "event";
     public static final String ERROR_OBJECT = "error.object";
 
@@ -125,8 +141,16 @@ public class DiscoveryConstant {
     public static final String PARTIAL = "partial";
     public static final String OK = "OK";
     public static final String NO = "NO";
+    public static final String NA = "N/A";
     public static final String DEFAULT = "default";
     public static final String UNKNOWN = "unknown";
+    public static final String IGNORED = "ignored";
+
+    public static final String ENDPOINT_SCAN_PACKAGES = "com.nepxion.discovery.plugin.admincenter.endpoint";
+    public static final String INSPECTOR_ENDPOINT_CLASS_NAME = "com.nepxion.discovery.plugin.admincenter.endpoint.InspectorEndpoint";
+    public static final String INSPECTOR_ENDPOINT_METHOD_NAME = "inspect";
+    public static final String INSPECTOR_ENDPOINT_URL = "/inspector/inspect";
+    public static final String INSPECTOR_ENDPOINT_HEADER = "endpoint-inspector-inspect";
 
     public static final String EXPRESSION_PREFIX = "H";
     public static final String EXPRESSION_REGEX = "\\#" + EXPRESSION_PREFIX + "\\['\\S+'\\]";

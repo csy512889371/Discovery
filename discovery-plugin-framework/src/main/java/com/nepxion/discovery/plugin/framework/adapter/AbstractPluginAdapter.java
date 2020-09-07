@@ -9,6 +9,7 @@ package com.nepxion.discovery.plugin.framework.adapter;
  * @version 1.0
  */
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -19,9 +20,11 @@ import org.springframework.cloud.client.serviceregistry.Registration;
 
 import com.nepxion.discovery.common.constant.DiscoveryConstant;
 import com.nepxion.discovery.common.entity.RuleEntity;
+import com.nepxion.discovery.common.entity.RuleEntityWrapper;
 import com.nepxion.discovery.common.exception.DiscoveryException;
 import com.nepxion.discovery.plugin.framework.cache.PluginCache;
 import com.nepxion.discovery.plugin.framework.cache.RuleCache;
+import com.nepxion.discovery.plugin.framework.context.PluginContextHolder;
 import com.netflix.loadbalancer.Server;
 
 public abstract class AbstractPluginAdapter implements PluginAdapter {
@@ -31,14 +34,27 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
     @Autowired
     protected PluginCache pluginCache;
 
+    @Autowired(required = false)
+    protected PluginContextHolder pluginContextHolder;
+
     @Autowired
     protected RuleCache ruleCache;
+
+    @Autowired(required = false)
+    protected ApplicationInfoAdapter applicationInfoAdapter;
 
     @Value("${" + DiscoveryConstant.SPRING_APPLICATION_GROUP_KEY + ":" + DiscoveryConstant.GROUP + "}")
     private String groupKey;
 
     @Value("${" + DiscoveryConstant.SPRING_APPLICATION_TYPE + ":" + DiscoveryConstant.UNKNOWN + "}")
     private String applicationType;
+
+    protected Map<String, String> emptyMetadata = new HashMap<String, String>();
+
+    @Override
+    public String getPlugin() {
+        return getMetadata().get(DiscoveryConstant.SPRING_APPLICATION_DISCOVERY_PLUGIN);
+    }
 
     @Override
     public String getGroupKey() {
@@ -72,6 +88,20 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
     }
 
     @Override
+    public String getServiceAppId() {
+        if (applicationInfoAdapter != null) {
+            return applicationInfoAdapter.getAppId();
+        }
+
+        return null;
+    }
+
+    @Override
+    public String getServiceUUId() {
+        return getMetadata().get(DiscoveryConstant.SPRING_APPLICATION_UUID);
+    }
+
+    @Override
     public String getHost() {
         return registration.getHost();
     }
@@ -82,12 +112,8 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
     }
 
     @Override
-    public String getContextPath() {
-        return getMetadata().get(DiscoveryConstant.SPRING_APPLICATION_CONTEXT_PATH);
-    }
-
-    @Override
     public Map<String, String> getMetadata() {
+        // 获取本服务静态元数据，当元数据通过Open API方式变更后，本服务是不会更新的
         return registration.getMetadata();
     }
 
@@ -151,14 +177,51 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
         return ruleCache.get(DiscoveryConstant.DYNAMIC_RULE);
     }
 
-    @Override
-    public void setDynamicRule(RuleEntity ruleEntity) {
-        ruleCache.put(DiscoveryConstant.DYNAMIC_RULE, ruleEntity);
+    // 从动态全局规则和动态局部规则缓存组装出最终的动态规则
+    private void assembleDynamicRule() {
+        RuleEntity dynamicPartialRule = getDynamicPartialRule();
+        RuleEntity dynamicGlobalRule = getDynamicGlobalRule();
+
+        RuleEntity dynamicRule = RuleEntityWrapper.assemble(dynamicPartialRule, dynamicGlobalRule);
+        ruleCache.put(DiscoveryConstant.DYNAMIC_RULE, dynamicRule);
     }
 
     @Override
-    public void clearDynamicRule() {
-        ruleCache.clear(DiscoveryConstant.DYNAMIC_RULE);
+    public RuleEntity getDynamicPartialRule() {
+        return ruleCache.get(DiscoveryConstant.DYNAMIC_PARTIAL_RULE);
+    }
+
+    @Override
+    public void setDynamicPartialRule(RuleEntity ruleEntity) {
+        ruleCache.put(DiscoveryConstant.DYNAMIC_PARTIAL_RULE, ruleEntity);
+
+        assembleDynamicRule();
+    }
+
+    @Override
+    public void clearDynamicPartialRule() {
+        ruleCache.clear(DiscoveryConstant.DYNAMIC_PARTIAL_RULE);
+
+        assembleDynamicRule();
+    }
+
+    @Override
+    public RuleEntity getDynamicGlobalRule() {
+        return ruleCache.get(DiscoveryConstant.DYNAMIC_GLOBAL_RULE);
+    }
+
+    @Override
+    public void setDynamicGlobalRule(RuleEntity ruleEntity) {
+        ruleCache.put(DiscoveryConstant.DYNAMIC_GLOBAL_RULE, ruleEntity);
+
+        assembleDynamicRule();
+    }
+
+    @Override
+    public void clearDynamicGlobalRule() {
+        ruleCache.clear(DiscoveryConstant.DYNAMIC_GLOBAL_RULE);
+
+        assembleDynamicRule();
     }
 
     @Override
@@ -179,6 +242,26 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
         }
 
         return environment;
+    }
+
+    @Override
+    public String getZone() {
+        String zone = getMetadata().get(DiscoveryConstant.ZONE);
+        if (StringUtils.isEmpty(zone)) {
+            zone = DiscoveryConstant.DEFAULT;
+        }
+
+        return zone;
+    }
+
+    @Override
+    public String getContextPath() {
+        return getMetadata().get(DiscoveryConstant.SPRING_APPLICATION_CONTEXT_PATH);
+    }
+
+    @Override
+    public String getServerPlugin(Server server) {
+        return getServerMetadata(server).get(DiscoveryConstant.SPRING_APPLICATION_DISCOVERY_PLUGIN);
     }
 
     @Override
@@ -224,6 +307,11 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
     }
 
     @Override
+    public String getServerServiceUUId(Server server) {
+        return getServerMetadata(server).get(DiscoveryConstant.SPRING_APPLICATION_UUID);
+    }
+
+    @Override
     public String getServerVersion(Server server) {
         String serverVersion = getServerMetadata(server).get(DiscoveryConstant.VERSION);
         if (StringUtils.isEmpty(serverVersion)) {
@@ -254,18 +342,33 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
     }
 
     @Override
+    public String getServerZone(Server server) {
+        String serverZone = getServerMetadata(server).get(DiscoveryConstant.ZONE);
+        if (StringUtils.isEmpty(serverZone)) {
+            serverZone = DiscoveryConstant.DEFAULT;
+        }
+
+        return serverZone;
+    }
+
+    @Override
     public String getServerContextPath(Server server) {
         return getServerMetadata(server).get(DiscoveryConstant.SPRING_APPLICATION_CONTEXT_PATH);
     }
 
     @Override
-    public Map<String, String> getInstanceMetadata(ServiceInstance serviceInstance) {
-        return serviceInstance.getMetadata();
+    public Map<String, String> getInstanceMetadata(ServiceInstance instance) {
+        return instance.getMetadata();
     }
 
     @Override
-    public String getInstanceGroupKey(ServiceInstance serviceInstance) {
-        String groupKey = getInstanceMetadata(serviceInstance).get(DiscoveryConstant.SPRING_APPLICATION_GROUP_KEY);
+    public String getInstancePlugin(ServiceInstance instance) {
+        return getInstanceMetadata(instance).get(DiscoveryConstant.SPRING_APPLICATION_DISCOVERY_PLUGIN);
+    }
+
+    @Override
+    public String getInstanceGroupKey(ServiceInstance instance) {
+        String groupKey = getInstanceMetadata(instance).get(DiscoveryConstant.SPRING_APPLICATION_GROUP_KEY);
 
         if (StringUtils.isEmpty(groupKey)) {
             groupKey = DiscoveryConstant.GROUP;
@@ -275,10 +378,10 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
     }
 
     @Override
-    public String getInstanceGroup(ServiceInstance serviceInstance) {
-        String instanceGroupKey = getInstanceGroupKey(serviceInstance);
+    public String getInstanceGroup(ServiceInstance instance) {
+        String instanceGroupKey = getInstanceGroupKey(instance);
 
-        String instanceGroup = getInstanceMetadata(serviceInstance).get(instanceGroupKey);
+        String instanceGroup = getInstanceMetadata(instance).get(instanceGroupKey);
         if (StringUtils.isEmpty(instanceGroup)) {
             instanceGroup = DiscoveryConstant.DEFAULT;
         }
@@ -287,18 +390,23 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
     }
 
     @Override
-    public String getInstanceServiceType(ServiceInstance serviceInstance) {
-        return getInstanceMetadata(serviceInstance).get(DiscoveryConstant.SPRING_APPLICATION_TYPE);
+    public String getInstanceServiceType(ServiceInstance instance) {
+        return getInstanceMetadata(instance).get(DiscoveryConstant.SPRING_APPLICATION_TYPE);
     }
 
     @Override
-    public String getInstanceServiceId(ServiceInstance serviceInstance) {
-        return serviceInstance.getServiceId().toLowerCase();
+    public String getInstanceServiceId(ServiceInstance instance) {
+        return instance.getServiceId().toLowerCase();
     }
 
     @Override
-    public String getInstanceVersion(ServiceInstance serviceInstance) {
-        String instanceVersion = getInstanceMetadata(serviceInstance).get(DiscoveryConstant.VERSION);
+    public String getInstanceServiceUUId(ServiceInstance instance) {
+        return getInstanceMetadata(instance).get(DiscoveryConstant.SPRING_APPLICATION_UUID);
+    }
+
+    @Override
+    public String getInstanceVersion(ServiceInstance instance) {
+        String instanceVersion = getInstanceMetadata(instance).get(DiscoveryConstant.VERSION);
         if (StringUtils.isEmpty(instanceVersion)) {
             instanceVersion = DiscoveryConstant.DEFAULT;
         }
@@ -307,8 +415,8 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
     }
 
     @Override
-    public String getInstanceRegion(ServiceInstance serviceInstance) {
-        String instanceRegion = getInstanceMetadata(serviceInstance).get(DiscoveryConstant.REGION);
+    public String getInstanceRegion(ServiceInstance instance) {
+        String instanceRegion = getInstanceMetadata(instance).get(DiscoveryConstant.REGION);
         if (StringUtils.isEmpty(instanceRegion)) {
             instanceRegion = DiscoveryConstant.DEFAULT;
         }
@@ -317,8 +425,8 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
     }
 
     @Override
-    public String getInstanceEnvironment(ServiceInstance serviceInstance) {
-        String instanceEnvironment = getInstanceMetadata(serviceInstance).get(DiscoveryConstant.ENVIRONMENT);
+    public String getInstanceEnvironment(ServiceInstance instance) {
+        String instanceEnvironment = getInstanceMetadata(instance).get(DiscoveryConstant.ENVIRONMENT);
         if (StringUtils.isEmpty(instanceEnvironment)) {
             instanceEnvironment = DiscoveryConstant.DEFAULT;
         }
@@ -327,23 +435,40 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
     }
 
     @Override
-    public String getInstanceContextPath(ServiceInstance serviceInstance) {
-        return getInstanceMetadata(serviceInstance).get(DiscoveryConstant.SPRING_APPLICATION_CONTEXT_PATH);
+    public String getInstanceZone(ServiceInstance instance) {
+        String instanceZone = getInstanceMetadata(instance).get(DiscoveryConstant.ZONE);
+        if (StringUtils.isEmpty(instanceZone)) {
+            instanceZone = DiscoveryConstant.DEFAULT;
+        }
+
+        return instanceZone;
+    }
+
+    @Override
+    public String getInstanceContextPath(ServiceInstance instance) {
+        return getInstanceMetadata(instance).get(DiscoveryConstant.SPRING_APPLICATION_CONTEXT_PATH);
     }
 
     @Override
     public String getPluginInfo(String previousPluginInfo) {
+        String plugin = getPlugin();
         String serviceId = getServiceId();
         String host = getHost();
         int port = getPort();
         String version = getVersion();
         String region = getRegion();
         String environment = getEnvironment();
+        String zone = getZone();
         String group = getGroup();
 
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(previousPluginInfo + " -> " + serviceId);
-        stringBuilder.append("[" + host + ":" + port + "]");
+        if (StringUtils.isNotEmpty(previousPluginInfo)) {
+            stringBuilder.append(previousPluginInfo + " -> ");
+        }
+
+        stringBuilder.append("[ID=" + serviceId + "]");
+        stringBuilder.append("[P=" + plugin + "]");
+        stringBuilder.append("[H=" + host + ":" + port + "]");
         if (StringUtils.isNotEmpty(version)) {
             stringBuilder.append("[V=" + version + "]");
         }
@@ -353,8 +478,23 @@ public abstract class AbstractPluginAdapter implements PluginAdapter {
         if (StringUtils.isNotEmpty(environment)) {
             stringBuilder.append("[E=" + environment + "]");
         }
+        if (StringUtils.isNotEmpty(zone)) {
+            stringBuilder.append("[Z=" + zone + "]");
+        }
         if (StringUtils.isNotEmpty(group)) {
             stringBuilder.append("[G=" + group + "]");
+        }
+
+        if (pluginContextHolder != null) {
+            String traceId = pluginContextHolder.getTraceId();
+            if (StringUtils.isNotEmpty(traceId)) {
+                stringBuilder.append("[TID=" + traceId + "]");
+            }
+
+            String spanId = pluginContextHolder.getSpanId();
+            if (StringUtils.isNotEmpty(spanId)) {
+                stringBuilder.append("[SID=" + spanId + "]");
+            }
         }
 
         return stringBuilder.toString();

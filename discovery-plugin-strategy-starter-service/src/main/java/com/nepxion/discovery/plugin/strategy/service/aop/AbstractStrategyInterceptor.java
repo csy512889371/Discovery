@@ -16,6 +16,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -26,8 +28,11 @@ import com.nepxion.discovery.common.util.StringUtil;
 import com.nepxion.discovery.plugin.framework.adapter.PluginAdapter;
 import com.nepxion.discovery.plugin.strategy.service.constant.ServiceStrategyConstant;
 import com.nepxion.discovery.plugin.strategy.service.context.ServiceStrategyContextHolder;
+import com.nepxion.discovery.plugin.strategy.util.StrategyUtil;
 
 public abstract class AbstractStrategyInterceptor {
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractStrategyInterceptor.class);
+
     @Autowired
     protected ConfigurableEnvironment environment;
 
@@ -49,21 +54,10 @@ public abstract class AbstractStrategyInterceptor {
         if (StringUtils.isNotEmpty(businessRequestHeaders)) {
             requestHeaderList.addAll(StringUtil.splitToList(businessRequestHeaders.toLowerCase(), DiscoveryConstant.SEPARATE));
         }
-        /*if (!requestHeaderList.contains(DiscoveryConstant.N_D_VERSION)) {
-            requestHeaderList.add(DiscoveryConstant.N_D_VERSION);
-        }
-        if (!requestHeaderList.contains(DiscoveryConstant.N_D_REGION)) {
-            requestHeaderList.add(DiscoveryConstant.N_D_REGION);
-        }
-        if (!requestHeaderList.contains(DiscoveryConstant.N_D_ADDRESS)) {
-            requestHeaderList.add(DiscoveryConstant.N_D_ADDRESS);
-        }
-        if (!requestHeaderList.contains(DiscoveryConstant.N_D_VERSION_WEIGHT)) {
-            requestHeaderList.add(DiscoveryConstant.N_D_VERSION_WEIGHT);
-        }
-        if (!requestHeaderList.contains(DiscoveryConstant.N_D_REGION_WEIGHT)) {
-            requestHeaderList.add(DiscoveryConstant.N_D_REGION_WEIGHT);
-        }*/
+
+        LOG.info("------- " + getInterceptorName() + " Intercept Information -------");
+        LOG.info(getInterceptorName() + " desires to intercept customer headers are {}", requestHeaderList);
+        LOG.info("--------------------------------------------------");
     }
 
     protected void interceptInputHeader() {
@@ -82,7 +76,7 @@ public abstract class AbstractStrategyInterceptor {
             return;
         }
 
-        System.out.println("------- Intercept Input Header Information -------");
+        System.out.println("------- " + getInterceptorName() + " Intercept Input Header Information -------");
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
             boolean isHeaderContains = isHeaderContains(headerName.toLowerCase());
@@ -100,14 +94,10 @@ public abstract class AbstractStrategyInterceptor {
     }
 
     protected boolean isHeaderContainsExcludeInner(String headerName) {
-        return isHeaderContains(headerName) &&
-                !StringUtils.equals(headerName, DiscoveryConstant.N_D_SERVICE_GROUP) &&
-                !StringUtils.equals(headerName, DiscoveryConstant.N_D_SERVICE_TYPE) &&
-                !StringUtils.equals(headerName, DiscoveryConstant.N_D_SERVICE_ID) &&
-                !StringUtils.equals(headerName, DiscoveryConstant.N_D_SERVICE_ADDRESS) &&
-                !StringUtils.equals(headerName, DiscoveryConstant.N_D_SERVICE_VERSION) &&
-                !StringUtils.equals(headerName, DiscoveryConstant.N_D_SERVICE_REGION) &&
-                !StringUtils.equals(headerName, DiscoveryConstant.N_D_SERVICE_ENVIRONMENT);
+        return isHeaderContains(headerName) && !StrategyUtil.isInnerHeaderContains(headerName);
+
         // return isHeaderContains(headerName) && !headerName.startsWith(DiscoveryConstant.N_D_SERVICE_PREFIX);
     }
+
+    protected abstract String getInterceptorName();
 }
